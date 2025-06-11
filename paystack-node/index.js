@@ -1,9 +1,15 @@
 require('dotenv').config();
 const express = require('express');
 const axios = require('axios');
+const crypto = require('crypto');
 
 const app = express();
-app.use(express.json());
+app.use(express.json({
+  verify: (req, res, buf) => {
+    // store raw body for webhook signature verification
+    req.rawBody = buf.toString();
+  }
+}));
 
 const PAYSTACK_BASE = process.env.PAYSTACK_BASE || 'https://api.paystack.co';
 const PAYSTACK_SECRET_KEY = process.env.PAYSTACK_SECRET_KEY;
@@ -17,6 +23,16 @@ const headers = {
   Authorization: `Bearer ${PAYSTACK_SECRET_KEY}`,
   'Content-Type': 'application/json'
 };
+
+function verifySignature(req) {
+  const signature = req.headers['x-paystack-signature'];
+  if (!signature) return false;
+  const hash = crypto
+    .createHmac('sha512', PAYSTACK_SECRET_KEY)
+    .update(req.rawBody)
+    .digest('hex');
+  return signature === hash;
+}
 
 async function createRecipient(name, accountNumber, bankCode) {
   const data = {
@@ -43,6 +59,11 @@ async function initiateTransfer(amount, recipientCode, reason) {
 }
 
 app.post('/webhook', (req, res) => {
+  if (!verifySignature(req)) {
+    console.warn('Invalid webhook signature');
+    return res.status(400).send('invalid signature');
+  }
+
   console.log('Webhook received:', req.body);
   res.status(200).send('ok');
 });

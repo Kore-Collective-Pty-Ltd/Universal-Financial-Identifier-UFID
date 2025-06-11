@@ -1,6 +1,6 @@
 # Paystack Node Example
 
-This is a simple Node.js project that demonstrates how to send funds using the Paystack API and receive webhook updates.
+This is a simple Node.js project that demonstrates how to send funds using the Paystack API and receive webhook updates. Incoming webhooks are verified using your Paystack secret key.
 
 ## Setup
 
@@ -15,4 +15,4 @@ This is a simple Node.js project that demonstrates how to send funds using the P
    npm start
    ```
 
-The script will create a transfer recipient and initiate a transfer of 20,000 ZAR. Incoming webhook events are logged to the console.
+The script will create a transfer recipient and initiate a transfer of 20,000 ZAR. Incoming webhook events are logged to the console after signature verification.
